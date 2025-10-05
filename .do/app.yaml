@@ -109,18 +109,7 @@ databases:
   - name: db
     engine: PG
     version: "16"
-    production: true
-    cluster_name: pikcel-shopify-db
-    db_name: pikcel_shopify
-    db_user: pikcel_admin
-
-    # Database instance size
-    size: db-s-dev-database
-
-    # Enable automatic daily backups
-    # backup:
-    #   enabled: true
-    #   retention_days: 7
+    production: false
 
 # Jobs (for database migrations and setup)
 jobs:

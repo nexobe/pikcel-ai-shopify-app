@@ -30,3 +30,74 @@ model Session {
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
 }
+
+model Job {
+  id                   String    @id @default(uuid())
+  shop                 String    // Shopify shop domain
+  pikcelJobId          String    @unique // PikcelAI job ID
+  toolId               String    // AI tool/model ID
+  toolName             String?   // AI tool name (cached)
+  status               String    @default("pending") // pending, processing, completed, failed, cancelled
+  priority             String    @default("normal") // low, normal, high, urgent
+
+  // Image URLs
+  inputImageUrl        String
+  outputImageUrl       String?
+  thumbnailUrl         String?
+
+  // Processing details
+  parameters           String?   @db.Text // JSON string of processing parameters
+  errorMessage         String?   @db.Text
+  creditsUsed          Int       @default(0)
+  processingTimeMs     Int?
+  progress             Int       @default(0) // 0-100
+
+  // Shopify product context
+  productId            String?   // Shopify product ID (gid://shopify/Product/...)
+  productTitle         String?
+  variantId            String?   // Shopify variant ID
+  imageId              String?   // Shopify image ID
+
+  // Metadata
+  metadata             String?   @db.Text // JSON string for additional data
+  pushedToShopify      Boolean   @default(false)
+  pushedAt             DateTime?
+
+  // Timestamps
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([shop, status])
+  @@index([shop, createdAt])
+  @@index([pikcelJobId])
+  @@index([productId])
+}
+
+model JobBatch {
+  id                   String    @id @default(uuid())
+  shop                 String
+  name                 String?   // User-defined batch name
+  toolId               String
+  toolName             String?
+
+  // Batch statistics
+  totalJobs            Int       @default(0)
+  completedJobs        Int       @default(0)
+  failedJobs           Int       @default(0)
+  status               String    @default("pending") // pending, processing, completed, failed, partial
+
+  // Processing details
+  parameters           String?   @db.Text // JSON string of shared parameters
+  totalCreditsUsed     Int       @default(0)
+
+  // Timestamps
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([shop, status])
+  @@index([shop, createdAt])
+}
