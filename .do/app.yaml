@@ -91,6 +91,42 @@ services:
         scope: RUN_TIME
         type: SECRET
 
+      # Google Cloud Project configuration
+      - key: GOOGLE_CLOUD_PROJECT
+        value: "pikcel"
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: GCP_PROJECT_ID
+        value: "pikcel"
+        scope: RUN_TIME
+        type: GENERAL
+
+      # Google Gemini AI API Key
+      - key: GOOGLE_API_KEY
+        value: "AIzaSyDZYcDx-Ic5QkYhAOJ4fuAGuZvSeQJtFOY"
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: VITE_GOOGLE_API_KEY
+        value: "AIzaSyDZYcDx-Ic5QkYhAOJ4fuAGuZvSeQJtFOY"
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+
+      # PikcelAI API configuration
+      - key: PIKCEL_API_URL
+        value: "https://api.pikcel.ai"
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: PIKCEL_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: PIKCEL_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+
     # Health check configuration
     health_check:
       http_path: /healthz
