@@ -1,0 +1,162 @@
+#
+# DigitalOcean App Platform Specification
+# PikcelAI Shopify App - Production Configuration
+#
+# This file defines the infrastructure and deployment configuration for the
+# PikcelAI Shopify app on DigitalOcean App Platform.
+#
+# Documentation: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+#
+
+name: pikcel-ai-shopify-app
+region: nyc
+
+# Ingress Configuration
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+
+# Services
+services:
+  - name: web
+    # Git repository configuration
+    github:
+      repo: asghar07/pikcel-ai-shopify-app
+      branch: main
+      deploy_on_push: true
+
+    # Build configuration
+    build_command: npm run build
+
+    # Runtime configuration
+    run_command: npm start
+
+    # Dockerfile build (alternative to buildpack)
+    # Uncomment to use Dockerfile instead of buildpack
+    # dockerfile_path: Dockerfile
+
+    # Node.js runtime environment
+    environment_slug: node-js
+
+    # Instance size and scaling
+    instance_count: 1
+    instance_size_slug: basic-xxs
+
+    # HTTP configuration
+    http_port: 8080
+
+    # Environment variables
+    envs:
+      # Node environment
+      - key: NODE_ENV
+        value: production
+        scope: RUN_TIME
+        type: GENERAL
+
+      # Port configuration (DigitalOcean uses 8080)
+      - key: PORT
+        value: "8080"
+        scope: RUN_TIME
+        type: GENERAL
+
+      # Backend URL
+      - key: BACKEND_URL
+        value: ${APP_URL}
+        scope: RUN_TIME
+        type: GENERAL
+
+      # Shopify API credentials (set via CLI or control panel)
+      - key: SHOPIFY_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: SHOPIFY_API_SECRET
+        scope: RUN_TIME
+        type: SECRET
+
+      # Shopify app configuration
+      - key: SHOPIFY_APP_URL
+        value: ${APP_URL}
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: SHOPIFY_SCOPES
+        value: "read_products,write_products,read_files,write_files"
+        scope: RUN_TIME
+        type: GENERAL
+
+      # Database connection (bound from database component)
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+
+      # Session encryption key (generate with: openssl rand -base64 32)
+      - key: SHOPIFY_APP_SESSION_SECRET
+        scope: RUN_TIME
+        type: SECRET
+
+    # Health check configuration
+    health_check:
+      http_path: /healthz
+      initial_delay_seconds: 60
+      period_seconds: 10
+      timeout_seconds: 3
+      success_threshold: 1
+      failure_threshold: 3
+
+    # Routes configuration
+    routes:
+      - path: /
+
+# Database component
+databases:
+  - name: db
+    engine: PG
+    version: "16"
+    production: true
+    cluster_name: pikcel-shopify-db
+    db_name: pikcel_shopify
+    db_user: pikcel_admin
+
+    # Database instance size
+    size: db-s-dev-database
+
+    # Enable automatic daily backups
+    # backup:
+    #   enabled: true
+    #   retention_days: 7
+
+# Jobs (for database migrations and setup)
+jobs:
+  - name: db-migrate
+    kind: PRE_DEPLOY
+
+    github:
+      repo: asghar07/pikcel-ai-shopify-app
+      branch: main
+
+    environment_slug: node-js
+
+    run_command: npm run setup
+
+    envs:
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: NODE_ENV
+        value: production
+        scope: RUN_TIME
+        type: GENERAL
+
+# Alerts (optional)
+# alerts:
+#   - rule: DEPLOYMENT_FAILED
+#   - rule: DOMAIN_FAILED
+#   - rule: SERVICE_UNHEALTHY

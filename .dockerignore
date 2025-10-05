@@ -1,0 +1,63 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+.cache
+build
+dist
+.output
+.next
+.nuxt
+.turbo
+
+# Development files
+.env
+.env.*
+!.env.example
+.shopify
+*.local
+
+# Testing
+coverage
+.nyc_output
+
+# IDE
+.vscode
+.idea
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+.do/DEPLOYMENT.md
+.do/README.md
+.do/deploy.template.yaml
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+
+# Misc
+.editorconfig
+.eslintrc*
+.prettierrc*
+.prettierignore
+tsconfig.json
+*.md
+!package.json
+!package-lock.json

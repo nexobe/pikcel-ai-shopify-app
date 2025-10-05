@@ -1,0 +1,31 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "7ef5a5c004e74a46a511c08da5bfac43"
+name = "PikcelAI Image Editor"
+application_url = "http://localhost:5173"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2026-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+# Minimum scopes required for PikcelAI image workflows
+scopes = "read_products,write_products,read_files,write_files"
+
+[auth]
+redirect_urls = [
+  "http://localhost:5173/shopify/callback",
+  "https://app.pikcel.ai/shopify/callback"
+]

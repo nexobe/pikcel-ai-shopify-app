@@ -1,0 +1,110 @@
+name: Deploy to DigitalOcean App Platform
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Get App ID
+        id: app
+        run: |
+          APP_ID=$(doctl apps list --format ID,Spec.Name --no-header | grep "pikcel-ai-shopify-app" | awk '{print $1}')
+          echo "app_id=$APP_ID" >> $GITHUB_OUTPUT
+          echo "Found App ID: $APP_ID"
+
+      - name: Update App Spec
+        if: steps.app.outputs.app_id != ''
+        run: |
+          doctl apps update ${{ steps.app.outputs.app_id }} --spec .do/app.yaml
+
+      - name: Create App (if not exists)
+        if: steps.app.outputs.app_id == ''
+        run: |
+          doctl apps create --spec .do/app.yaml
+
+      - name: Get Deployment Status
+        run: |
+          APP_ID=${{ steps.app.outputs.app_id }}
+          if [ -n "$APP_ID" ]; then
+            echo "Deployment Status:"
+            doctl apps get $APP_ID --format ID,ActiveDeployment.Phase,LiveURL
+          fi
+
+      - name: Wait for Deployment
+        if: steps.app.outputs.app_id != ''
+        run: |
+          APP_ID=${{ steps.app.outputs.app_id }}
+          echo "Waiting for deployment to complete..."
+
+          # Wait up to 10 minutes for deployment
+          for i in {1..60}; do
+            PHASE=$(doctl apps get $APP_ID --format ActiveDeployment.Phase --no-header)
+            echo "Current phase: $PHASE"
+
+            if [ "$PHASE" = "ACTIVE" ]; then
+              echo "✓ Deployment successful!"
+              exit 0
+            elif [ "$PHASE" = "ERROR" ] || [ "$PHASE" = "CANCELED" ]; then
+              echo "✗ Deployment failed with phase: $PHASE"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "⚠ Deployment timeout (10 minutes)"
+          exit 1
+
+      - name: Get App URL
+        if: success()
+        run: |
+          APP_ID=${{ steps.app.outputs.app_id }}
+          if [ -n "$APP_ID" ]; then
+            LIVE_URL=$(doctl apps get $APP_ID --format LiveURL --no-header)
+            echo "🚀 App deployed successfully!"
+            echo "Live URL: $LIVE_URL"
+            echo "LIVE_URL=$LIVE_URL" >> $GITHUB_ENV
+          fi
+
+      - name: Health Check
+        if: success()
+        run: |
+          if [ -n "$LIVE_URL" ]; then
+            echo "Performing health check..."
+            sleep 30  # Wait for app to fully start
+
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$LIVE_URL/healthz")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ Health check passed (HTTP $HTTP_CODE)"
+            else
+              echo "⚠ Health check returned HTTP $HTTP_CODE"
+              exit 1
+            fi
+          fi
+
+      - name: Notify Deployment Success
+        if: success()
+        run: |
+          echo "::notice title=Deployment Success::Application deployed successfully to $LIVE_URL"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        run: |
+          echo "::error title=Deployment Failed::Deployment to DigitalOcean failed. Check logs for details."
