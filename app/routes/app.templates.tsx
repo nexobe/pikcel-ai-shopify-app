@@ -5,7 +5,6 @@ import type {
   ActionFunctionArgs,
 } from 'react-router';
 import { useLoaderData, useFetcher } from 'react-router';
-import { json } from 'react-router';
 import { boundary } from '@shopify/shopify-app-react-router/server';
 import { authenticate } from '../shopify.server';
 import { pikcelService } from '../services/pikcelai.service';
@@ -32,20 +31,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       limit: 100,
     });
 
-    return json({
+    return {
       templates: response.data || [],
       success: true,
       error: null,
-    });
+    };
   } catch (error) {
     console.error('Failed to fetch templates:', error);
 
     // Return mock data for demonstration
-    return json({
+    return {
       templates: getMockTemplates(),
       success: false,
       error: 'Failed to fetch templates from PikcelAI API. Showing demo data.',
-    });
+    };
   }
 };
 
