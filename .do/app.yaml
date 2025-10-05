@@ -11,21 +11,12 @@
 name: pikcel-ai-shopify-app
 region: nyc
 
-# Ingress Configuration
-ingress:
-  rules:
-    - component:
-        name: web
-      match:
-        path:
-          prefix: /
-
 # Services
 services:
   - name: web
     # Git repository configuration
     github:
-      repo: asghar07/pikcel-ai-shopify-app
+      repo: nexobe/pikcel-ai-shopify-app
       branch: main
       deploy_on_push: true
 
@@ -137,7 +128,7 @@ jobs:
     kind: PRE_DEPLOY
 
     github:
-      repo: asghar07/pikcel-ai-shopify-app
+      repo: nexobe/pikcel-ai-shopify-app
       branch: main
 
     environment_slug: node-js
