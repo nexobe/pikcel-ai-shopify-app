@@ -2,37 +2,25 @@ import { useState, useMemo } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "../shopify.server";
+import { getSupabaseService } from "../services/supabase.server";
 import type { AIModel, AIToolCategory, CategoryGroup } from "../types/ai-models";
-
-// PikcelAI API endpoint - configure based on your environment
-const PIKCEL_API_URL = process.env.PIKCEL_API_URL || "https://api.pikcel.ai";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
 
   try {
-    // Fetch AI models from PikcelAI API
-    const response = await fetch(`${PIKCEL_API_URL}/api/ai-models`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch AI models: ${response.statusText}`);
-    }
-
-    const models: AIModel[] = await response.json();
+    // Fetch AI models directly from PikcelAI Supabase database
+    const supabase = getSupabaseService();
+    const models = await supabase.getActiveAIModels();
 
     return {
       models,
-      apiUrl: PIKCEL_API_URL,
+      error: null,
     };
   } catch (error) {
     console.error("Error fetching AI models:", error);
     return {
       models: [],
-      apiUrl: PIKCEL_API_URL,
       error: error instanceof Error ? error.message : "Failed to load AI tools",
     };
   }
