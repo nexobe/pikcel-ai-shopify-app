@@ -80,11 +80,27 @@ services:
         scope: RUN_TIME
         type: GENERAL
 
-      # Database connection (bound from database component)
+      # Supabase Database (PikcelAI existing database)
       - key: DATABASE_URL
-        value: ${db.DATABASE_URL}
+        value: "postgresql://postgres.cvzkmmxdbkjhgfongupg:TughrulAsghar1986!@db.cvzkmmxdbkjhgfongupg.supabase.co:5432/postgres"
         scope: RUN_AND_BUILD_TIME
+        type: SECRET
+
+      # Supabase Configuration (use existing PikcelAI Supabase)
+      - key: SUPABASE_URL
+        value: "https://cvzkmmxdbkjhgfongupg.supabase.co"
+        scope: RUN_TIME
         type: GENERAL
+
+      - key: SUPABASE_ANON_KEY
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2emttbXhkYmtqaGdmb25ndXBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMzI5MDAsImV4cCI6MjA1NjYwODkwMH0.LXkRVCSaB1IhXP7-y1kWdJ8GKqAZYUaibzRhNVr7BpI"
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: SUPABASE_SERVICE_KEY
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2emttbXhkYmtqaGdmb25ndXBnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTAzMjkwMCwiZXhwIjoyMDU2NjA4OTAwfQ.OI50eGUYsU_VMBGq6M6oPJoy-a5dfrgdgc3eSgklwxM"
+        scope: RUN_TIME
+        type: SECRET
 
       # Session encryption key (generate with: openssl rand -base64 32)
       - key: SHOPIFY_APP_SESSION_SECRET
@@ -104,14 +120,7 @@ services:
     routes:
       - path: /
 
-# Database component
-databases:
-  - name: db
-    engine: PG
-    version: "16"
-    production: false
-
-# Jobs (for database migrations and setup)
+# Jobs (for database migrations - uses PikcelAI Supabase database)
 jobs:
   - name: db-migrate
     kind: PRE_DEPLOY
@@ -126,9 +135,9 @@ jobs:
 
     envs:
       - key: DATABASE_URL
-        value: ${db.DATABASE_URL}
+        value: "postgresql://postgres.cvzkmmxdbkjhgfongupg:TughrulAsghar1986!@db.cvzkmmxdbkjhgfongupg.supabase.co:5432/postgres"
         scope: RUN_TIME
-        type: GENERAL
+        type: SECRET
 
       - key: NODE_ENV
         value: production
